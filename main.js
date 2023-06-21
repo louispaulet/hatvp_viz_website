@@ -10,10 +10,16 @@ $(document).ready(function() {
       years.forEach(year => {
         // Filter data for the current year
         let yearData = data.filter(item => item.annee_mandat == year);
+
         // Sort by remuneration descending
-        yearData.sort((a, b) => Number(b.remuneration) - Number(a.remuneration)); // Convert to numbers before sorting
-        // Select top 10
-        yearData = yearData.slice(0, 10);
+        let bestYearData = [...yearData];
+        bestYearData.sort((a, b) => Number(b.remuneration) - Number(a.remuneration)); // Convert to numbers before sorting
+        bestYearData = bestYearData.slice(0, 100);
+
+        // Sort by remuneration ascending
+        let worstYearData = [...yearData];
+        worstYearData.sort((a, b) => Number(a.remuneration) - Number(b.remuneration));
+        worstYearData = worstYearData.slice(0, 100);
 
         // Generate a new table for the current year
         let tableId = `table${year}`;
@@ -40,22 +46,28 @@ $(document).ready(function() {
           </table>
         `);
 
-        // Populate the table
-        yearData.forEach(row => {
-          $(`#${tableId} tbody`).append(
-            `<tr>
-              <td>${row['']}</td>
-              <td>${row['date_depot']}</td>
-              <td>${row['type_mandat']}</td>
-              <td>${row['declarant_prenom']}</td>
-              <td>${row['declarant_nom']}</td>
-              <td>${row['declarant_date_naissance']}</td>
-              <td>${row['remuneration']}</td>
-              <td>${row['annee_mandat']}</td>
-              <td>${row['code_postal']}</td>
-            </tr>`
-          );
-        });
+        // Function to populate the table
+        let populateTable = (data) => {
+          $(`#${tableId} tbody`).html(''); // Clear existing data
+          data.forEach(row => {
+            $(`#${tableId} tbody`).append(
+              `<tr>
+                <td>${row['']}</td>
+                <td>${row['date_depot']}</td>
+                <td>${row['type_mandat']}</td>
+                <td>${row['declarant_prenom']}</td>
+                <td>${row['declarant_nom']}</td>
+                <td>${row['declarant_date_naissance']}</td>
+                <td>${row['remuneration']}</td>
+                <td>${row['annee_mandat']}</td>
+                <td>${row['code_postal']}</td>
+              </tr>`
+            );
+          });
+        };
+
+        // Populate the table with the best salaries initially
+        populateTable(bestYearData);
 
         // Initialize DataTable with remuneration column descending order
         let table = $(`#${tableId}`).DataTable({
@@ -64,16 +76,22 @@ $(document).ready(function() {
 
         // Toggle between worst and best salaries on button click
         $(`#btn${year}`).on('click', function() {
-          let order = table.order();
-          // Check if current ordering is on remuneration column and is descending
-          if (order[0][0] === 6 && order[0][1] === 'desc') {
-            // If yes, order ascending (worst salaries)
-            table.order([6, 'asc']).draw();
+          // Destroy the existing table
+          table.destroy();
+          if ($(this).text() === 'Show Worst Salaries') {
+            // Populate with worst salaries and reinitialize DataTable
+            populateTable(worstYearData);
+            table = $(`#${tableId}`).DataTable({
+              "order": [[ 6, "asc" ]]
+            });
             $(this).text('Show Best Salaries');
             $(`#${headingId}`).text(`Worst Salaries for ${year}`);
           } else {
-            // If not, order descending (best salaries)
-            table.order([6, 'desc']).draw();
+            // Populate with best salaries and reinitialize DataTable
+            populateTable(bestYearData);
+            table = $(`#${tableId}`).DataTable({
+              "order": [[ 6, "desc" ]]
+            });
             $(this).text('Show Worst Salaries');
             $(`#${headingId}`).text(`Best of Salaries for ${year}`);
           }
