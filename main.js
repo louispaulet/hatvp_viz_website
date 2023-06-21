@@ -11,14 +11,15 @@ $(document).ready(function() {
         // Filter data for the current year
         let yearData = data.filter(item => item.annee_mandat == year);
         // Sort by remuneration descending
-        yearData.sort((a, b) => b.remuneration - a.remuneration);
+        yearData.sort((a, b) => Number(b.remuneration) - Number(a.remuneration)); // Convert to numbers before sorting
         // Select top 10
         yearData = yearData.slice(0, 10);
 
         // Generate a new table for the current year
         let tableId = `table${year}`;
+        let headingId = `heading${year}`;
         $('.container').append(`
-          <h2 class="mt-5">Best of Salaries for ${year}</h2>
+          <h2 id="${headingId}" class="mt-5">Best of Salaries for ${year}</h2>
           <button id="btn${year}" class="btn btn-primary mb-2">Show Worst Salaries</button>
           <table id="${tableId}" class="table table-striped table-bordered" style="width:100%">
             <thead>
@@ -56,20 +57,25 @@ $(document).ready(function() {
           );
         });
 
-        let table = $(`#${tableId}`).DataTable();
+        // Initialize DataTable with remuneration column descending order
+        let table = $(`#${tableId}`).DataTable({
+          "order": [[ 6, "desc" ]]
+        });
 
         // Toggle between worst and best salaries on button click
-        $(`#btn${year}`).click(function() {
+        $(`#btn${year}`).on('click', function() {
           let order = table.order();
           // Check if current ordering is on remuneration column and is descending
           if (order[0][0] === 6 && order[0][1] === 'desc') {
             // If yes, order ascending (worst salaries)
             table.order([6, 'asc']).draw();
             $(this).text('Show Best Salaries');
+            $(`#${headingId}`).text(`Worst Salaries for ${year}`);
           } else {
             // If not, order descending (best salaries)
             table.order([6, 'desc']).draw();
             $(this).text('Show Worst Salaries');
+            $(`#${headingId}`).text(`Best of Salaries for ${year}`);
           }
         });
       });
