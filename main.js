@@ -5,6 +5,7 @@ $(document).ready(function() {
     complete: function(results) {
       let data = results.data;
       let years = [...new Set(data.map(item => item.annee_mandat))]; // Get unique years
+      years.sort((a, b) => b - a); // Sort years in descending order
 
       years.forEach(year => {
         // Filter data for the current year
@@ -18,6 +19,7 @@ $(document).ready(function() {
         let tableId = `table${year}`;
         $('.container').append(`
           <h2 class="mt-5">Best of Salaries for ${year}</h2>
+          <button id="btn${year}" class="btn btn-primary mb-2">Show Worst Salaries</button>
           <table id="${tableId}" class="table table-striped table-bordered" style="width:100%">
             <thead>
               <tr>
@@ -54,7 +56,22 @@ $(document).ready(function() {
           );
         });
 
-        $(`#${tableId}`).DataTable();
+        let table = $(`#${tableId}`).DataTable();
+
+        // Toggle between worst and best salaries on button click
+        $(`#btn${year}`).click(function() {
+          let order = table.order();
+          // Check if current ordering is on remuneration column and is descending
+          if (order[0][0] === 6 && order[0][1] === 'desc') {
+            // If yes, order ascending (worst salaries)
+            table.order([6, 'asc']).draw();
+            $(this).text('Show Best Salaries');
+          } else {
+            // If not, order descending (best salaries)
+            table.order([6, 'desc']).draw();
+            $(this).text('Show Worst Salaries');
+          }
+        });
       });
     }
   });
