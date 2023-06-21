@@ -25,20 +25,20 @@ $(document).ready(function() {
         let tableId = `table${year}`;
         let headingId = `heading${year}`;
         $('.container').append(`
-          <h2 id="${headingId}" class="mt-5">Best of Salaries for ${year}</h2>
-          <button id="btn${year}" class="btn btn-primary mb-2">Show Worst Salaries</button>
+          <h2 id="${headingId}" class="mt-5">Meilleurs salaires pour ${year}</h2>
+          <button id="btn${year}" class="btn btn-primary mb-2">Voir les pires salaires</button>
           <table id="${tableId}" class="table table-striped table-bordered" style="width:100%">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Date</th>
-                <th>Type of Mandate</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Date of Birth</th>
-                <th>Remuneration</th>
-                <th>Mandate Year</th>
-                <th>Postal Code</th>
+                <th>Type de Mandat</th>
+                <th>Prénom</th>
+                <th>Nom</th>
+                <th>Date de Naissance</th>
+                <th>Rémunération</th>
+                <th>Année du Mandat</th>
+                <th>Code Postal</th>
               </tr>
             </thead>
             <tbody>
@@ -78,22 +78,22 @@ $(document).ready(function() {
         $(`#btn${year}`).on('click', function() {
           // Destroy the existing table
           table.destroy();
-          if ($(this).text() === 'Show Worst Salaries') {
+          if ($(this).text() === 'Voir les pires salaires') {
             // Populate with worst salaries and reinitialize DataTable
             populateTable(worstYearData);
             table = $(`#${tableId}`).DataTable({
               "order": [[ 6, "asc" ]]
             });
-            $(this).text('Show Best Salaries');
-            $(`#${headingId}`).text(`Worst Salaries for ${year}`);
+            $(this).text('Voir les meilleurs salaires');
+            $(`#${headingId}`).text(`Pires salaires pour ${year}`);
           } else {
             // Populate with best salaries and reinitialize DataTable
             populateTable(bestYearData);
             table = $(`#${tableId}`).DataTable({
               "order": [[ 6, "desc" ]]
             });
-            $(this).text('Show Worst Salaries');
-            $(`#${headingId}`).text(`Best of Salaries for ${year}`);
+            $(this).text('Voir les pires salaires');
+            $(`#${headingId}`).text(`Meilleurs salaires pour ${year}`);
           }
         });
       });
