@@ -1,0 +1,15 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  margin-top: 2em;
+}
+
+table {
+  width: 100%;
+}
+
+th, td {
+  text-align: center;
+}
