@@ -39,6 +39,7 @@ $(document).ready(function() {
                 <th>Rémunération</th>
                 <th>Année du Mandat</th>
                 <th>Code Postal</th>
+                <th>Description Mandat</th>
               </tr>
             </thead>
             <tbody>
@@ -61,6 +62,7 @@ $(document).ready(function() {
                 <td>${row['remuneration']}</td>
                 <td>${row['annee_mandat']}</td>
                 <td>${row['code_postal']}</td>
+                <td>${row['description_mandat']}</td>
               </tr>`
             );
           });
