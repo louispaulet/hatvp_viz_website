@@ -20,3 +20,7 @@ body {
 .container {
   flex: 1;
 }
+
+.blue-bar {
+  fill: blue;
+}
