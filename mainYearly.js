@@ -4,18 +4,6 @@ $(document).ready(function() {
   const processData = (results) => {
     let data = results.data;
 
-    // Compute best and worst 100 salaries overall
-    let bestOverallData = getTopN(data, 'remuneration', 1);
-    let worstOverallData = getTopN(data, 'remuneration', -1);
-
-    // Generate overall table
-    let {tableId, headingId} = generateTable('Toujours', '.container');
-    populateTable(tableId, bestOverallData);
-    let table = initDataTable(tableId, 6, "desc");
-
-    // Add overall toggle
-    toggleData(table, tableId, `btnToujours`, headingId, bestOverallData, worstOverallData, 'Toujours');
-
     let years = [...new Set(data.map(item => item.annee_mandat))]; // Get unique years
     years.sort((a, b) => b - a); // Sort years in descending order
 
@@ -30,7 +18,7 @@ $(document).ready(function() {
       // Generate year table
       let {tableId, headingId} = generateTable(year, '.container');
       populateTable(tableId, bestYearData);
-      let table = initDataTable(tableId, 6, "desc");
+      let table = initDataTable(tableId, "desc");
 
       // Add year toggle
       toggleData(table, tableId, `btn${year}`, headingId, bestYearData, worstYearData, year);
