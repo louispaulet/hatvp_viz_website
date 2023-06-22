@@ -12,7 +12,7 @@ $(document).ready(function () {
 function generateHistogram(data) {
     // Define the dimensions of the SVG container
     var margin = {top: 20, right: 20, bottom: 70, left: 60},
-        width = 800 - margin.left - margin.right,
+        width = 1200 - margin.left - margin.right,
         height = 600 - margin.top - margin.bottom;
 
     // Create the SVG container
@@ -74,10 +74,10 @@ function generateHistogram(data) {
         .attr("x", 0 - (height / 2))
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text("Number of Submissions");
+        .text("Nombre de déclarations publiées");
 
     svg.append("text")
         .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top + 40) + ")")
         .style("text-anchor", "middle")
-        .text("Date of Submission");
+        .text("Jour du publication");
 }
