@@ -103,12 +103,12 @@ $(document).ready(function() {
     let worstOverallData = getTopN(data, 'remuneration', -1);
 
     // Generate overall table
-    let {tableId, headingId} = generateTable('toujours', '.container');
+    let {tableId, headingId} = generateTable('Toujours', '.container');
     populateTable(tableId, bestOverallData);
     let table = initDataTable(tableId, 6, "desc");
 
     // Add overall toggle
-    toggleData(table, tableId, `btnOverall`, headingId, bestOverallData, worstOverallData);
+    toggleData(table, tableId, `btnToujours`, headingId, bestOverallData, worstOverallData);
 
     let years = [...new Set(data.map(item => item.annee_mandat))]; // Get unique years
     years.sort((a, b) => b - a); // Sort years in descending order
