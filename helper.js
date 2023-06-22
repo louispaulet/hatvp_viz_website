@@ -18,8 +18,11 @@ function getTopN(data, column, order, n = 100){
 function generateTable(year, containerClass){
     let tableId = `table${year}`;
     let headingId = `heading${year}`;
+    let year_display = (year == 'Toujours') ? 'de tous les temps' : year;
+
+    
     $(containerClass).append(`
-      <h2 id="${headingId}" class="mt-5">Meilleurs salaires pour ${year}</h2>
+      <h2 id="${headingId}" class="mt-5">Meilleurs salaires ${year_display}</h2>
       <button id="btn${year}" class="btn btn-primary mb-2">Voir les pires salaires</button>
       <table id="${tableId}" class="table table-striped table-bordered" style="width:100%">
         <thead>
