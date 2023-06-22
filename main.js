@@ -14,7 +14,7 @@ $(document).ready(function() {
     let table = initDataTable(tableId, 6, "desc");
 
     // Add overall toggle
-    toggleData(table, tableId, `btnToujours`, headingId, bestOverallData, worstOverallData);
+    toggleData(table, tableId, `btnToujours`, headingId, bestOverallData, worstOverallData, 'Toujours');
 
     let years = [...new Set(data.map(item => item.annee_mandat))]; // Get unique years
     years.sort((a, b) => b - a); // Sort years in descending order
@@ -33,7 +33,7 @@ $(document).ready(function() {
       let table = initDataTable(tableId, 6, "desc");
 
       // Add year toggle
-      toggleData(table, tableId, `btn${year}`, headingId, bestYearData, worstYearData);
+      toggleData(table, tableId, `btn${year}`, headingId, bestYearData, worstYearData, year);
     });
   };
 
