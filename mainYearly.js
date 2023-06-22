@@ -16,7 +16,7 @@ $(document).ready(function() {
       let worstYearData = getTopN(yearData, 'remuneration', -1);
 
       // Generate year table
-      let {tableId, headingId} = generateTable(year, '.container');
+      let {tableId, headingId} = generateTable(year, "#table_section");
       populateTable(tableId, bestYearData);
       let table = initDataTable(tableId, "desc");
 

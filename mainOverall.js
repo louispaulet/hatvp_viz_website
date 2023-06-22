@@ -9,7 +9,7 @@ $(document).ready(function() {
     let worstOverallData = getTopN(data, 'remuneration', -1);
 
     // Generate overall table
-    let {tableId, headingId} = generateTable('Toujours', '.container');
+    let {tableId, headingId} = generateTable('Toujours', '#table_section');
     populateTable(tableId, bestOverallData);
     let table = initDataTable(tableId, "desc");
 

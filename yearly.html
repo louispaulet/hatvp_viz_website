@@ -9,15 +9,35 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container mt-5">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">💰 HATVP</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="index.html">Meilleurs salaires de tous les temps <span class="sr-only">(current)</span></a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  
+  <div class="container mt-5" id="table_section">
     <h1 class='text-center'>💼 Visualisation des Rémunérations des élus - HATVP 📊</h1>
     <br>
-    <a href="index.html">Voir les meilleurs salaires de tous les temps</a>
+    
     <br>
     <h2> 📝 Explication faiblesse des salaires de 2023</h2> 
     <p>⏳ Les salaires de l'année 2023 sont déclarés au prorata-temporis ce qui explique leur faiblesse lorsqu'ils sont comparés à ceux des années précédentes. Il s'agit en réalité de salaires partiels. 💰</p>
     <p>💵 Les salaires des années 2022, et antérieures, sont complets.</p>
   </div>
+  
+  <footer class="footer bg-light mt-auto py-3">
+    <div class="container">
+    Honorables Analystes, Traqueurs, et Vengeurs de la Probité (HATVP)
+    </div>
+</footer>
 
   <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
   <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
