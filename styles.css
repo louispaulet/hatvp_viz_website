@@ -24,3 +24,15 @@ body {
 .blue-bar {
   fill: blue;
 }
+
+table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    table th,
+    table td {
+      padding: 0.5rem;
+      border: 1px solid #dee2e6;
+    }

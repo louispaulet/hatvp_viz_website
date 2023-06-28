@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HATVP - Visualisation des Rémunérations</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="index.html">👩‍💼🔎👣⚖️🔍</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -31,32 +31,35 @@
       </ul>
     </div>
   </nav>
-  
-  <div class="container mt-5">
-    <h1 class='text-center'>💼 Publication des déclarations 📊</h1>
-    <br>
-    <h2 >Nombre de déclarations publiées par jour</h2>
-    <p> 🤔 Combien de déclarations HATVP sont publiées par jour ? </p>
 
-    <div id="bar_graphs"></div>
-</div>
+  <div class="container">
+    <h1>Consulter une déclaration HATVP brute 🍰😛</h1>
+    <div>
+      <label for="urlDropdown">Liste des déclarations disponibles :</label>
+      <select id="urlDropdown"></select>
+      <br>
+      <label for="urlDropdown">Le bouton ci-dessous permet d'afficher la déclaration sélectionnée.</label>
+      <button id="loadButton" class="btn btn-primary" style="font-size: 2em; padding: 20px; width: 100%;">Charger la déclaration</button>
+    </div>
+    <h2>Données du déclarant 📊</h2>
+    <div id="declarantData"></div>
+    <h2>Toutes les données 💡</h2>
+    <div id="xmlData"></div>
+  </div>
 
-  
   <footer class="footer bg-light mt-auto py-3">
     <div class="container">
-    👩‍💼🔎👣⚖️🔍 Honorables Analystes, Traqueurs, et Vengeurs de la Probité (HATVP)
+      👩‍💼🔎👣⚖️🔍 Honorables Analystes, Traqueurs et Vengeurs de la Probité (HATVP)
     </div>
-</footer>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  </footer>
+
   <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-  <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.1.0/papaparse.min.js"></script> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
-  <script src="helper.js"></script>
-  <script src="https://d3js.org/d3.v6.min.js"></script>
-  <script src="mainSubmissionStats.js"></script>
-
+  <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.1.0/papaparse.min.js"></script>
+  <!-- Custom JavaScript -->
+  <script src="declaration_display.js"></script>
 </body>
 </html>
