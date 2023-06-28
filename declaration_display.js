@@ -1,50 +1,60 @@
 function formatXMLData(data, depthThreshold, path) {
   var html = '';
+  var bannedWords = ['#text:', 'items'];
+  
+  function removeBannedWords(str) {
+    bannedWords.forEach(function(word) {
+      str = str.replace(word, '');
+    });
+    return str;
+  }
+
   if (typeof data === 'object') {
     if (Array.isArray(data)) {
       if (data.length > 0 && typeof data[0] === 'object') {
         html += '<table>';
         html += '<thead><tr>';
         for (var key in data[0]) {
-          html += '<th>' + key + '</th>';
+          html += '<th>' + removeBannedWords(key) + '</th>';
         }
         html += '</tr></thead>';
         html += '<tbody>';
         data.forEach(function(item) {
           html += '<tr>';
           for (var key in item) {
-            html += '<td>' + formatXMLData(item[key], depthThreshold, path + '.' + key) + '</td>';
+            html += '<td>' + removeBannedWords(formatXMLData(item[key], depthThreshold, path + '.' + key)) + '</td>';
           }
           html += '</tr>';
         });
         html += '</tbody>';
         html += '</table>';
       } else {
-        html += data.join(', ');
+        html += data.join(' ');
       }
     } else {
       if (Object.keys(data).length > depthThreshold) {
         html += '<table>';
         for (var key in data) {
           html += '<tr>';
-          html += '<td>' + key + '</td>';
-          html += '<td>' + formatXMLData(data[key], depthThreshold, path + '.' + key) + '</td>';
+          html += '<td>' + removeBannedWords(key) + '</td>';
+          html += '<td>' + removeBannedWords(formatXMLData(data[key], depthThreshold, path + '.' + key)) + '</td>';
           html += '</tr>';
         }
         html += '</table>';
       } else {
         html += '<ul>';
         for (var key in data) {
-          html += '<li>' + key + ': ' + formatXMLData(data[key], depthThreshold, path + '.' + key) + '</li>';
+          html += '<li>' + removeBannedWords(key) + ': ' + removeBannedWords(formatXMLData(data[key], depthThreshold, path + '.' + key)) + '</li>';
         }
         html += '</ul>';
       }
     }
   } else {
-    html += data;
+    html += removeBannedWords(data);
   }
   return html;
 }
+
 
 function fetchXMLData(url) {
   $.ajax({
