@@ -82,9 +82,11 @@ function populateDropdown(urls) {
   dropdown.empty();
   for (var i = 0; i < urls.length; i++) {
     var url = urls[i];
-    dropdown.append($('<option></option>').attr('value', url).text(url));
+    var truncatedUrl = url.length > 30 ? "..." + url.slice(-24) : url;
+    dropdown.append($('<option></option>').attr('value', url).text(truncatedUrl));
   }
 }
+
 
 // Load XML data on button click
 $('#loadButton').click(function() {
