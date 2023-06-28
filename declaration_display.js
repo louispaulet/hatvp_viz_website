@@ -1,5 +1,4 @@
-// Function to format XML data as HTML
-function formatXMLData(data, depthThreshold) {
+function formatXMLData(data, depthThreshold, path) {
   var html = '';
   if (typeof data === 'object') {
     if (Array.isArray(data)) {
@@ -14,7 +13,7 @@ function formatXMLData(data, depthThreshold) {
         data.forEach(function(item) {
           html += '<tr>';
           for (var key in item) {
-            html += '<td>' + formatXMLData(item[key], depthThreshold) + '</td>';
+            html += '<td>' + formatXMLData(item[key], depthThreshold, path + '.' + key) + '</td>';
           }
           html += '</tr>';
         });
@@ -29,14 +28,14 @@ function formatXMLData(data, depthThreshold) {
         for (var key in data) {
           html += '<tr>';
           html += '<td>' + key + '</td>';
-          html += '<td>' + formatXMLData(data[key], depthThreshold) + '</td>';
+          html += '<td>' + formatXMLData(data[key], depthThreshold, path + '.' + key) + '</td>';
           html += '</tr>';
         }
         html += '</table>';
       } else {
         html += '<ul>';
         for (var key in data) {
-          html += '<li>' + key + ': ' + formatXMLData(data[key], depthThreshold) + '</li>';
+          html += '<li>' + key + ': ' + formatXMLData(data[key], depthThreshold, path + '.' + key) + '</li>';
         }
         html += '</ul>';
       }
@@ -47,14 +46,17 @@ function formatXMLData(data, depthThreshold) {
   return html;
 }
 
-// Fetch XML data
 function fetchXMLData(url) {
   $.ajax({
     url: url,
     dataType: 'xml',
     success: function(data) {
       var jsonData = xmlToJson(data);
-      var xmlHtml = formatXMLData(jsonData, 3); // Depth threshold: 3
+      console.log(jsonData)
+      var declarantData = jsonData.declarations.declaration.general.declarant;
+      var declarantHtml = formatXMLData(declarantData, 3, 'general.declarant');
+      $('#declarantData').html(declarantHtml);
+      var xmlHtml = formatXMLData(jsonData, 3, ''); // Depth threshold: 3
       $('#xmlData').html(xmlHtml);
     },
     error: function() {
@@ -62,6 +64,7 @@ function fetchXMLData(url) {
     }
   });
 }
+
 
 // Populate URL dropdown
 function populateDropdown(urls) {
