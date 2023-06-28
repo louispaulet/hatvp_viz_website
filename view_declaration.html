@@ -1,24 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Display XML Data</title>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1rem;
-    }
-
-    table th,
-    table td {
-      padding: 0.5rem;
-      border: 1px solid #dee2e6;
-    }
-  </style>
+   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HATVP - Visualisation des Rémunérations</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">👩‍💼🔎👣⚖️🔍</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="index.html">Meilleurs salaires de tous les temps <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="yearly.html">Meilleurs salaires par année <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="submission_stats.html">Publication des déclarations <span class="sr-only">(current)</span></a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  
+  
+  
   <div class="container">
     <h1>XML Data</h1>
     <div>
@@ -31,10 +43,21 @@
     <h2>All Data</h2>
     <div id="xmlData"></div>
   </div>
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- Bootstrap JS -->
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+  
+  
+    <footer class="footer bg-light mt-auto py-3">
+    <div class="container">
+    👩‍💼🔎👣⚖️🔍 Honorables Analystes, Traqueurs, et Vengeurs de la Probité (HATVP)
+    </div>
+</footer>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.1.0/papaparse.min.js"></script>
   <!-- Custom JavaScript -->
   <script src="declaration_display.js"></script>
 </body>
