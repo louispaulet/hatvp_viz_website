@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HATVP - Visualisation des Rémunérations</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="index.html">👩‍💼🔎👣⚖️🔍</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -28,29 +28,26 @@
       </ul>
     </div>
   </nav>
-  
-  
-  
+
   <div class="container">
-    <h1>XML Data</h1>
+    <h1>Consulter une déclaration HATVP brute 😊</h1>
     <div>
-      <label for="urlDropdown">Select URL:</label>
+      <label for="urlDropdown">Liste des déclarations disponibles :</label>
       <select id="urlDropdown"></select>
-      <button id="loadButton" class="btn btn-primary">Load XML</button>
+      <label for="urlDropdown">Le bouton ci-dessous permet d'afficher la déclaration sélectionnée.</label>
+      <button id="loadButton" class="btn btn-primary" style="font-size: 2em; padding: 20px; width: 100%;">Charger la déclaration</button>
     </div>
-    <h2>Declarant Data</h2>
+    <h2>Données du déclarant 📊</h2>
     <div id="declarantData"></div>
-    <h2>All Data</h2>
+    <h2>Toutes les données 💡</h2>
     <div id="xmlData"></div>
   </div>
 
-  
-  
-    <footer class="footer bg-light mt-auto py-3">
+  <footer class="footer bg-light mt-auto py-3">
     <div class="container">
-    👩‍💼🔎👣⚖️🔍 Honorables Analystes, Traqueurs, et Vengeurs de la Probité (HATVP)
+      👩‍💼🔎👣⚖️🔍 Honorables Analystes, Traqueurs et Vengeurs de la Probité (HATVP)
     </div>
-</footer>
+  </footer>
 
   <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
@@ -61,5 +58,4 @@
   <!-- Custom JavaScript -->
   <script src="declaration_display.js"></script>
 </body>
-
 </html>
