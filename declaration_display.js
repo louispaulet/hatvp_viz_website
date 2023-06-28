@@ -1,6 +1,6 @@
 function formatXMLData(data, depthThreshold, path) {
   var html = '';
-  var bannedWords = ['#text:', 'items'];
+  var bannedWords = ['#text:', 'items', 'id:', 'label:', '#text'];
   
   function removeBannedWords(str) {
     bannedWords.forEach(function(word) {
