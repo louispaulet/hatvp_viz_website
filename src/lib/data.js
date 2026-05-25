@@ -71,6 +71,10 @@ export function formatNumber(value) {
   return numberFormatter.format(Number(value || 0));
 }
 
+export function formatDeclarationFilename(url) {
+  return String(url || '').split('/').filter(Boolean).pop() || '';
+}
+
 export function formatDate(value) {
   if (!value) {
     return '';

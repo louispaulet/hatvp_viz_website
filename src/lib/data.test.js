@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMonthlyPublicationSeries,
   formatCurrency,
+  formatDeclarationFilename,
   getTopN,
   getYears,
   groupRowsByYear,
@@ -76,5 +77,13 @@ describe('data utilities', () => {
     expect(parseDeclarationUrlCsv(',url\n1,https://example.test/declaration.xml\n')).toEqual([
       'https://example.test/declaration.xml',
     ]);
+  });
+
+  it('formats declaration URLs as filenames', () => {
+    expect(
+      formatDeclarationFilename(
+        'https://example.test/xml_unitary_declarations/declarations_hatvp_batch_00000007.xml',
+      ),
+    ).toBe('declarations_hatvp_batch_00000007.xml');
   });
 });

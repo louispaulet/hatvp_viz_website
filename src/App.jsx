@@ -18,6 +18,7 @@ import {
   SALARY_DATASET,
   buildMonthlyPublicationSeries,
   formatCurrency,
+  formatDeclarationFilename,
   formatNumber,
   getTopN,
   getYears,
@@ -323,7 +324,7 @@ function DeclarationsView() {
         <select value={selectedUrl} onChange={(event) => setSelectedUrl(event.target.value)}>
           {filteredUrls.map((url) => (
             <option key={url} value={url}>
-              {url.length > 92 ? `...${url.slice(-86)}` : url}
+              {formatDeclarationFilename(url)}
             </option>
           ))}
         </select>
