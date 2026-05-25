@@ -51,7 +51,7 @@ describe('App', () => {
   });
 
   it('opens the yearly tab from the hash', async () => {
-    window.location.hash = '#annees';
+    window.location.hash = '#/annees';
     render(<App />);
 
     await waitFor(() => expect(screen.getByText('Choisir une année de mandat')).toBeInTheDocument());

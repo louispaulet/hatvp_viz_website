@@ -8,6 +8,7 @@ import {
   TableProperties,
 } from 'lucide-react';
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import MetricCard from './components/MetricCard.jsx';
 import SalaryTable from './components/SalaryTable.jsx';
 import XmlViewer from './components/XmlViewer.jsx';
@@ -38,28 +39,34 @@ const tabs = [
   { id: 'declarations', label: 'Déclarations', icon: FileText },
 ];
 
-const defaultHash = 'classement';
+export default function App() {
+  normalizeLegacyHash();
 
-function activeTabFromHash() {
-  const hash = window.location.hash.replace('#', '');
-  return tabs.some((tab) => tab.id === hash) ? hash : defaultHash;
+  return (
+    <HashRouter>
+      <Dashboard />
+    </HashRouter>
+  );
 }
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState(activeTabFromHash);
+function normalizeLegacyHash() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const legacyRoute = window.location.hash.replace('#', '');
+  if (tabs.some((tab) => tab.id === legacyRoute)) {
+    window.history.replaceState(null, '', `${window.location.pathname}#/${legacyRoute}`);
+  }
+}
+
+function Dashboard() {
+  const location = useLocation();
+  const activeTab = tabs.find((tab) => location.pathname === `/${tab.id}`)?.id || 'classement';
   const [salaryRows, setSalaryRows] = useState([]);
   const [publicationRows, setPublicationRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    function onHashChange() {
-      setActiveTab(activeTabFromHash());
-    }
-
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
 
   useEffect(() => {
     Promise.all([parseCsvFile(SALARY_DATASET), parseCsvFile(PUBLICATION_DATASET)])
@@ -73,33 +80,28 @@ export default function App() {
 
   const stats = useMemo(() => salaryStats(salaryRows), [salaryRows]);
 
-  function navigate(tabId) {
-    window.location.hash = tabId;
-    setActiveTab(tabId);
-  }
-
   return (
     <div className="app-shell">
       <header className="hero">
         <nav className="topbar" aria-label="Navigation principale">
-          <a className="brand" href="#classement" onClick={() => setActiveTab('classement')}>
+          <NavLink className="brand" to="/classement">
             <Landmark size={24} aria-hidden="true" />
             <span>HATVP Viz</span>
-          </a>
+          </NavLink>
           <div className="tabs" role="tablist" aria-label="Sections du tableau de bord">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
-                <button
+                <NavLink
                   key={tab.id}
+                  to={`/${tab.id}`}
                   role="tab"
                   aria-selected={activeTab === tab.id}
-                  className={activeTab === tab.id ? 'tab active' : 'tab'}
-                  onClick={() => navigate(tab.id)}
+                  className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
                 >
                   <Icon size={17} aria-hidden="true" />
                   {tab.label}
-                </button>
+                </NavLink>
               );
             })}
           </div>
@@ -127,10 +129,13 @@ export default function App() {
         {!loading && !error ? (
           <>
             <StatsGrid stats={stats} />
-            {activeTab === 'classement' ? <OverallView rows={salaryRows} /> : null}
-            {activeTab === 'annees' ? <YearlyView rows={salaryRows} /> : null}
-            {activeTab === 'publications' ? <PublicationsView rows={publicationRows} /> : null}
-            {activeTab === 'declarations' ? <DeclarationsView /> : null}
+            <Routes>
+              <Route path="/classement" element={<OverallView rows={salaryRows} />} />
+              <Route path="/annees" element={<YearlyView rows={salaryRows} />} />
+              <Route path="/publications" element={<PublicationsView rows={publicationRows} />} />
+              <Route path="/declarations" element={<DeclarationsView />} />
+              <Route path="*" element={<Navigate to="/classement" replace />} />
+            </Routes>
           </>
         ) : null}
       </main>
