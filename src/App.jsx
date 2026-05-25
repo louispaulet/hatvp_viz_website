@@ -344,7 +344,7 @@ function DeclarationsView() {
         <section className="panel">
           <p className="eyebrow">Données du déclarant</p>
           <h2>Identité déclarée</h2>
-          <XmlViewer value={declarantData} />
+          <XmlViewer value={declarantData} compact initialDepth={4} />
         </section>
       ) : null}
 

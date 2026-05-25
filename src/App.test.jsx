@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App.jsx';
 
@@ -40,6 +40,7 @@ vi.mock('./lib/data.js', async () => {
 
 describe('App', () => {
   beforeEach(() => {
+    vi.unstubAllGlobals();
     window.location.hash = '';
   });
 
@@ -56,5 +57,31 @@ describe('App', () => {
 
     await waitFor(() => expect(screen.getByText('Choisir une année de mandat')).toBeInTheDocument());
     expect(screen.getByText('Plus hautes rémunérations en 2022')).toBeInTheDocument();
+  });
+
+  it('loads a declaration and renders the XML explorer controls', async () => {
+    window.location.hash = '#/declarations';
+    const fetchMock = vi.fn((url) => {
+      const body = String(url).endsWith('.xml')
+        ? '<declarations><declaration><general><declarant><nom>ABAD</nom><prenom>DAMIEN</prenom></declarant></general></declaration></declarations>'
+        : ',url\n1,https://example.test/declaration.xml\n';
+
+      return Promise.resolve({
+        ok: true,
+        text: () => Promise.resolve(body),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<App />);
+
+    const loadButton = await screen.findByRole('button', { name: 'Charger la déclaration' });
+    await waitFor(() => expect(loadButton).not.toBeDisabled());
+    fireEvent.click(loadButton);
+
+    await waitFor(() => expect(screen.getByText('Déclaration complète')).toBeInTheDocument());
+    expect(screen.getByLabelText(/rechercher une clé/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Tout replier/i })).toBeInTheDocument();
+    expect(screen.getByText('ABAD')).toBeInTheDocument();
   });
 });

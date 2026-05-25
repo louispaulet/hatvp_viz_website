@@ -45,10 +45,6 @@ export function parseXml(xmlText) {
 
 export function cleanXmlKey(value) {
   return String(value)
-    .replaceAll('#text:', '')
     .replaceAll('#text', '')
-    .replaceAll('items', '')
-    .replaceAll('id:', '')
-    .replaceAll('label:', '')
     .trim();
 }
