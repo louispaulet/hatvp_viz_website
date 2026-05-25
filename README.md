@@ -1,27 +1,51 @@
+# HATVP Viz
 
-# 📊 Visualisation des Rémunérations HATVP 📈
+Tableau de bord React pour explorer des données publiques HATVP : rémunérations déclarées, classements par année, rythme de publication des déclarations et consultation de déclarations XML brutes.
 
-Bienvenue dans ce projet passionnant qui vous permet de jeter un œil sur les rémunérations de nos chers députés en France! Les données sont fournies par la HATVP (Haute Autorité pour la Transparence de la Vie Publique) 👀.
+Site canonique : [https://hatvp.thefrenchartist.dev/](https://hatvp.thefrenchartist.dev/)
 
-Les données sont présentées dans un tableau clair et interactif qui permet non seulement de trier et filtrer les résultats, mais aussi de basculer entre les meilleurs 💰 et les pires salaires 😮 pour chaque année. C'est la transparence à son meilleur!
+## Commandes
 
-## 🚀 Comment démarrer
+```bash
+make up      # installe les dépendances puis lance Vite
+make test    # lance les tests Vitest
+make build   # génère dist/
+make deploy  # build puis publie dist/ avec gh-pages
+```
 
-Envie d'explorer par vous-même? Suivez ces étapes:
+Les commandes npm équivalentes sont disponibles dans `package.json` : `dev`, `test`, `build`, `preview` et `deploy`.
 
-1. Clonez le dépôt Github en utilisant ce lien : https://github.com/louispaulet/hatvp_viz_website.git
-2. Après avoir cloné le dépôt, lancez un serveur HTTP à l'emplacement de `index.html` et naviguez sur localhost:8080
-3. Voilà! Vous êtes prêt à explorer les données 🧐.
+## Stack
 
-## 🛠️ Technologies utilisées
+- Vite + React
+- Tailwind CSS v4 via `@tailwindcss/vite`
+- Papa Parse pour les CSV
+- Recharts pour le graphique de publication
+- Vitest + Testing Library pour les tests
+- `gh-pages` pour le déploiement GitHub Pages
 
-Ce projet utilise plusieurs technologies pour faciliter le traitement et la visualisation des données:
+## Structure
 
-- HTML/CSS pour la structure et le style 🎨
-- Bootstrap 4 pour le design responsive 📱
-- jQuery pour faciliter la manipulation du DOM 🪄
-- Papa Parse pour analyser les données CSV 🧾
-- DataTables pour rendre les données triables et filtrables 📚
+- `src/` : application React, composants, styles et utilitaires de données.
+- `public/datasets/` : CSV locaux embarqués dans le build.
+- `public/CNAME` : domaine personnalisé GitHub Pages (`hatvp.thefrenchartist.dev`).
+- `public/*.html` : redirections de compatibilité pour les anciennes pages HTML.
+- `Makefile` : raccourcis de développement, test, build et déploiement.
 
-Dive in and enjoy! 🎉
+## Données
 
+Les classements utilisent `public/datasets/best_of_mandatElectifDto.csv`.
+
+Les statistiques de publication utilisent `public/datasets/submissions_per_date.csv`.
+
+Le lecteur de déclarations brutes conserve la source distante historique :
+
+```text
+https://raw.githubusercontent.com/louispaulet/hatvp_viz/main/datasets/xml_unitary_declarations/content/unitary_dataset_url_df.csv
+```
+
+## Déploiement
+
+Le site est servi à la racine du domaine personnalisé, donc `vite.config.js` garde `base: "/"`.
+
+`make deploy` exécute le build Vite puis publie `dist/` sur GitHub Pages avec le paquet `gh-pages`.

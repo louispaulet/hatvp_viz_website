@@ -1,0 +1,354 @@
+import {
+  BarChart3,
+  Database,
+  FileText,
+  Landmark,
+  Loader2,
+  ShieldCheck,
+  TableProperties,
+} from 'lucide-react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import MetricCard from './components/MetricCard.jsx';
+import SalaryTable from './components/SalaryTable.jsx';
+import XmlViewer from './components/XmlViewer.jsx';
+import {
+  DECLARATION_URL_DATASET,
+  PUBLICATION_DATASET,
+  SALARY_DATASET,
+  buildMonthlyPublicationSeries,
+  formatCurrency,
+  formatNumber,
+  getTopN,
+  getYears,
+  groupRowsByYear,
+  normalizePublicationRows,
+  normalizeSalaryRows,
+  parseCsvFile,
+  parseDeclarationUrlCsv,
+  salaryStats,
+} from './lib/data.js';
+import { parseXml } from './lib/xml.js';
+
+const PublicationsChart = lazy(() => import('./components/PublicationsChart.jsx'));
+
+const tabs = [
+  { id: 'classement', label: 'Classement', icon: TableProperties },
+  { id: 'annees', label: 'Par année', icon: BarChart3 },
+  { id: 'publications', label: 'Publications', icon: Database },
+  { id: 'declarations', label: 'Déclarations', icon: FileText },
+];
+
+const defaultHash = 'classement';
+
+function activeTabFromHash() {
+  const hash = window.location.hash.replace('#', '');
+  return tabs.some((tab) => tab.id === hash) ? hash : defaultHash;
+}
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState(activeTabFromHash);
+  const [salaryRows, setSalaryRows] = useState([]);
+  const [publicationRows, setPublicationRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    function onHashChange() {
+      setActiveTab(activeTabFromHash());
+    }
+
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  useEffect(() => {
+    Promise.all([parseCsvFile(SALARY_DATASET), parseCsvFile(PUBLICATION_DATASET)])
+      .then(([salaryData, publicationData]) => {
+        setSalaryRows(normalizeSalaryRows(salaryData));
+        setPublicationRows(normalizePublicationRows(publicationData));
+      })
+      .catch(() => setError('Impossible de charger les jeux de données locaux.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const stats = useMemo(() => salaryStats(salaryRows), [salaryRows]);
+
+  function navigate(tabId) {
+    window.location.hash = tabId;
+    setActiveTab(tabId);
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="hero">
+        <nav className="topbar" aria-label="Navigation principale">
+          <a className="brand" href="#classement" onClick={() => setActiveTab('classement')}>
+            <Landmark size={24} aria-hidden="true" />
+            <span>HATVP Viz</span>
+          </a>
+          <div className="tabs" role="tablist" aria-label="Sections du tableau de bord">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  className={activeTab === tab.id ? 'tab active' : 'tab'}
+                  onClick={() => navigate(tab.id)}
+                >
+                  <Icon size={17} aria-hidden="true" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        <div className="hero-content">
+          <div>
+            <p className="eyebrow">Transparence de la vie publique</p>
+            <h1>Explorer les rémunérations déclarées des élus</h1>
+            <p className="hero-copy">
+              Un tableau de bord lisible pour parcourir les déclarations HATVP, comparer les
+              rémunérations par année et suivre le rythme de publication des données.
+            </p>
+          </div>
+          <div className="hero-badge">
+            <ShieldCheck size={22} aria-hidden="true" />
+            <span>Données publiques HATVP</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="content">
+        {error ? <div className="alert">{error}</div> : null}
+        {loading ? <LoadingState /> : null}
+        {!loading && !error ? (
+          <>
+            <StatsGrid stats={stats} />
+            {activeTab === 'classement' ? <OverallView rows={salaryRows} /> : null}
+            {activeTab === 'annees' ? <YearlyView rows={salaryRows} /> : null}
+            {activeTab === 'publications' ? <PublicationsView rows={publicationRows} /> : null}
+            {activeTab === 'declarations' ? <DeclarationsView /> : null}
+          </>
+        ) : null}
+      </main>
+
+      <footer className="site-footer">
+        <span>Honorables Analystes, Traqueurs et Vengeurs de la Probité</span>
+        <a href="https://hatvp.thefrenchartist.dev/">hatvp.thefrenchartist.dev</a>
+      </footer>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="loading-state">
+      <Loader2 className="spin" size={28} aria-hidden="true" />
+      <span>Chargement des données HATVP...</span>
+    </div>
+  );
+}
+
+function StatsGrid({ stats }) {
+  return (
+    <div className="metrics-grid">
+      <MetricCard label="Lignes analysées" value={formatNumber(stats.declarations)} helper="mandats électifs" />
+      <MetricCard label="Années couvertes" value={formatNumber(stats.years)} helper="dans le fichier local" />
+      <MetricCard label="Rémunération moyenne" value={formatCurrency(stats.averageSalary)} helper="toutes lignes" />
+      <MetricCard label="Maximum observé" value={formatCurrency(stats.maxSalary)} helper="classement global" />
+    </div>
+  );
+}
+
+function OverallView({ rows }) {
+  const [mode, setMode] = useState('best');
+  const tableRows = useMemo(() => getTopN(rows, mode === 'best' ? 'desc' : 'asc'), [mode, rows]);
+
+  return (
+    <SalaryTable
+      rows={tableRows}
+      title={mode === 'best' ? 'Plus hautes rémunérations de tous les temps' : 'Plus basses rémunérations de tous les temps'}
+      mode={mode}
+      onModeChange={setMode}
+    />
+  );
+}
+
+function YearlyView({ rows }) {
+  const [mode, setMode] = useState('best');
+  const [selectedYear, setSelectedYear] = useState('');
+  const years = useMemo(() => getYears(rows), [rows]);
+  const groupedRows = useMemo(() => groupRowsByYear(rows), [rows]);
+  const activeYear = selectedYear || years[0] || '';
+  const tableRows = useMemo(
+    () => getTopN(groupedRows[activeYear] || [], mode === 'best' ? 'desc' : 'asc'),
+    [activeYear, groupedRows, mode],
+  );
+
+  return (
+    <div className="stack">
+      <section className="panel compact-panel">
+        <div>
+          <p className="eyebrow">Classement annuel</p>
+          <h2>Choisir une année de mandat</h2>
+        </div>
+        <select value={activeYear} onChange={(event) => setSelectedYear(event.target.value)}>
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+        <p className="note">
+          Les salaires 2023 sont déclarés prorata temporis, ce qui peut les rendre plus faibles que les
+          années complètes précédentes.
+        </p>
+      </section>
+      <SalaryTable
+        rows={tableRows}
+        title={mode === 'best' ? `Plus hautes rémunérations en ${activeYear}` : `Plus basses rémunérations en ${activeYear}`}
+        mode={mode}
+        onModeChange={setMode}
+      />
+    </div>
+  );
+}
+
+function PublicationsView({ rows }) {
+  const series = useMemo(() => buildMonthlyPublicationSeries(rows), [rows]);
+  const total = rows.reduce((sum, row) => sum + row.count, 0);
+  const peak = series.reduce((highest, row) => (row.count > highest.count ? row : highest), {
+    count: 0,
+    label: '',
+  });
+
+  return (
+    <div className="stack">
+      <div className="metrics-grid two">
+        <MetricCard label="Déclarations publiées" value={formatNumber(total)} helper="dans le fichier local" />
+        <MetricCard label="Mois le plus dense" value={peak.label || '-'} helper={`${formatNumber(peak.count)} déclarations`} />
+      </div>
+      <Suspense fallback={<div className="loading-state">Chargement du graphique...</div>}>
+        <PublicationsChart data={series} />
+      </Suspense>
+      <section className="panel prose-panel">
+        <p className="eyebrow">Lecture rapide</p>
+        <h2>Ce que montre le rythme de publication</h2>
+        <p>
+          Le volume publié augmente nettement à partir de 2019, atteint un pic autour de 2020,
+          puis se stabilise à un niveau plus élevé que les premières années observées. Cette vue
+          sert surtout à repérer les périodes de forte publication et les variations de cadence.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function DeclarationsView() {
+  const [urls, setUrls] = useState([]);
+  const [selectedUrl, setSelectedUrl] = useState('');
+  const [urlQuery, setUrlQuery] = useState('');
+  const [xmlData, setXmlData] = useState(null);
+  const [declarantData, setDeclarantData] = useState(null);
+  const [status, setStatus] = useState('Chargement de la liste des déclarations...');
+  const [isLoadingXml, setIsLoadingXml] = useState(false);
+  const filteredUrls = useMemo(() => {
+    const query = urlQuery.trim().toLowerCase();
+    const filtered = query ? urls.filter((url) => url.toLowerCase().includes(query)) : urls;
+    const capped = filtered.slice(0, 200);
+    return selectedUrl && !capped.includes(selectedUrl) ? [selectedUrl, ...capped] : capped;
+  }, [selectedUrl, urlQuery, urls]);
+
+  useEffect(() => {
+    fetch(DECLARATION_URL_DATASET)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Erreur réseau');
+        }
+        return response.text();
+      })
+      .then((csv) => {
+        const parsedUrls = parseDeclarationUrlCsv(csv);
+        setUrls(parsedUrls);
+        setSelectedUrl(parsedUrls[0] || '');
+        setStatus(parsedUrls.length ? '' : 'Aucune déclaration disponible.');
+      })
+      .catch(() => setStatus('Impossible de charger la liste distante des déclarations.'));
+  }, []);
+
+  function loadDeclaration() {
+    if (!selectedUrl) {
+      return;
+    }
+
+    setIsLoadingXml(true);
+    setStatus('');
+    fetch(selectedUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Erreur réseau');
+        }
+        return response.text();
+      })
+      .then((xmlText) => {
+        const parsed = parseXml(xmlText);
+        setXmlData(parsed);
+        setDeclarantData(parsed?.declarations?.declaration?.general?.declarant || null);
+      })
+      .catch(() => setStatus('Impossible de charger cette déclaration XML.'))
+      .finally(() => setIsLoadingXml(false));
+  }
+
+  return (
+    <div className="stack">
+      <section className="panel compact-panel">
+        <div>
+          <p className="eyebrow">Déclaration brute</p>
+          <h2>Consulter le contenu XML public</h2>
+        </div>
+        <input
+          value={urlQuery}
+          onChange={(event) => setUrlQuery(event.target.value)}
+          placeholder="Filtrer par numéro ou fragment d’URL"
+          aria-label="Filtrer les déclarations disponibles"
+        />
+        <select value={selectedUrl} onChange={(event) => setSelectedUrl(event.target.value)}>
+          {filteredUrls.map((url) => (
+            <option key={url} value={url}>
+              {url.length > 92 ? `...${url.slice(-86)}` : url}
+            </option>
+          ))}
+        </select>
+        <button className="primary-button" disabled={!selectedUrl || isLoadingXml} onClick={loadDeclaration}>
+          {isLoadingXml ? 'Chargement...' : 'Charger la déclaration'}
+        </button>
+        {status ? <p className="note">{status}</p> : null}
+        {!status && urls.length > filteredUrls.length ? (
+          <p className="note">
+            {filteredUrls.length} résultats affichés sur {formatNumber(urls.length)}. Utilisez le filtre
+            pour cibler une déclaration précise.
+          </p>
+        ) : null}
+      </section>
+
+      {declarantData ? (
+        <section className="panel">
+          <p className="eyebrow">Données du déclarant</p>
+          <h2>Identité déclarée</h2>
+          <XmlViewer value={declarantData} />
+        </section>
+      ) : null}
+
+      {xmlData ? (
+        <section className="panel">
+          <p className="eyebrow">Toutes les données</p>
+          <h2>Déclaration complète</h2>
+          <XmlViewer value={xmlData} />
+        </section>
+      ) : null}
+    </div>
+  );
+}
