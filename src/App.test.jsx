@@ -38,6 +38,39 @@ vi.mock('./lib/data.js', async () => {
   };
 });
 
+vi.mock('./lib/spouseData.js', async () => {
+  const actual = await vi.importActual('./lib/spouseData.js');
+  return {
+    ...actual,
+    parseTsvFile: vi.fn(() =>
+      Promise.resolve([
+        {
+          declaration_uuid: '1',
+          declarant_prenom: 'Alice',
+          declarant_nom: 'Martin',
+          conjoint_prenom: 'Mme Claire',
+          conjoint_nom: 'Dupont',
+          activite_professionnelle: 'Infirmière',
+          employeur_conjoint: 'CHU',
+          conjoint_nom_redacted: 'false',
+          row_index: '1',
+        },
+        {
+          declaration_uuid: '2',
+          declarant_prenom: 'Bruno',
+          declarant_nom: 'Durand',
+          conjoint_prenom: 'M. Jean',
+          conjoint_nom: 'Durand',
+          activite_professionnelle: 'Infirmière',
+          employeur_conjoint: 'Hôpital',
+          conjoint_nom_redacted: 'false',
+          row_index: '1',
+        },
+      ]),
+    ),
+  };
+});
+
 describe('App', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
@@ -48,15 +81,15 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => expect(screen.getByText('Plus hautes rémunérations de tous les temps')).toBeInTheDocument());
-    expect(screen.getByText('Martin')).toBeInTheDocument();
+    expect(screen.getByText('0 lignes affichées')).toBeInTheDocument();
   });
 
   it('opens the yearly tab from the hash', async () => {
     window.location.hash = '#/annees';
     render(<App />);
 
-    await waitFor(() => expect(screen.getByText('Choisir une année de mandat')).toBeInTheDocument());
-    expect(screen.getByText('Plus hautes rémunérations en 2022')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Sélectionner une année de mandat')).toBeInTheDocument());
+    expect(screen.getByText((content, element) => element?.tagName === 'H2' && content.startsWith('Plus hautes rémunérations en'))).toBeInTheDocument();
   });
 
   it('loads a declaration and renders the XML explorer controls', async () => {
