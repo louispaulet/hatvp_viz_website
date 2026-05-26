@@ -82,6 +82,6 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByText('Déclaration complète')).toBeInTheDocument());
     expect(screen.getByLabelText(/rechercher une clé/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Tout replier/i })).toBeInTheDocument();
-    expect(screen.getByText('ABAD')).toBeInTheDocument();
+    expect(screen.getAllByText('ABAD').length).toBeGreaterThan(0);
   });
 });

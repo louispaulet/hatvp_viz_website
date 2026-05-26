@@ -531,8 +531,25 @@ td {
   overflow-wrap: anywhere;
 }
 
-.xml-tree-summary {
+.xml-tree-key mark,
+.xml-tree-value mark,
+.xml-tree-private-value mark {
+  border-radius: 4px;
+  padding: 0 2px;
+  background: #fef08a;
+  color: inherit;
+}
+
+.xml-tree-meta {
   justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.xml-tree-summary {
   border-radius: 999px;
   padding: 3px 8px;
   background: #eff6ff;
@@ -540,6 +557,29 @@ td {
   font-size: 0.78rem;
   font-weight: 900;
   white-space: nowrap;
+}
+
+.xml-interest-badge {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.xml-interest-badge.interesting {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.xml-interest-badge.boilerplate {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.xml-interest-badge.empty {
+  background: #f8fafc;
+  color: #94a3b8;
 }
 
 .xml-tree-path {
@@ -580,6 +620,17 @@ td {
 .xml-tree-private-value {
   color: #64748b;
   font-style: italic;
+}
+
+.xml-tree-muted-value {
+  color: #64748b;
+}
+
+.xml-tree-branch.boilerplate > .xml-tree-node,
+.xml-tree-branch.empty > .xml-tree-node,
+.xml-tree-leaf.boilerplate,
+.xml-tree-leaf.empty {
+  background: #fbfdff;
 }
 
 .xml-viewer.compact .xml-tree {
@@ -687,6 +738,10 @@ td {
 
   .xml-tree-node {
     grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .xml-tree-meta {
+    flex-wrap: wrap;
   }
 
   .xml-tree-path {

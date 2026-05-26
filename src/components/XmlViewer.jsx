@@ -1,24 +1,19 @@
 import { ChevronRight, EyeOff, Layers2, Search, UnfoldVertical } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
+import {
+  classifyXmlNode,
+  isBusinessEmptyXmlValue,
+  isInterestingXmlValue,
+  isXmlBranch,
+  normalizeXmlTerm,
+  unwrapXmlTextNode,
+} from '../lib/xmlInterest.js';
 import { cleanXmlKey } from '../lib/xml.js';
 
 const ROOT_PATH = 'racine';
 
-function unwrapTextNode(value) {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
-
-  const entries = Object.entries(value);
-  if (entries.length === 1 && entries[0][0] === '#text') {
-    return entries[0][1];
-  }
-
-  return value;
-}
-
 function isEmptyValue(value) {
-  const unwrappedValue = unwrapTextNode(value);
+  const unwrappedValue = unwrapXmlTextNode(value);
   if (unwrappedValue !== value) {
     return isEmptyValue(unwrappedValue);
   }
@@ -39,8 +34,7 @@ function isEmptyValue(value) {
 }
 
 function isBranch(value) {
-  const unwrappedValue = unwrapTextNode(value);
-  return unwrappedValue !== null && typeof unwrappedValue === 'object';
+  return isXmlBranch(value);
 }
 
 function labelForKey(key, index) {
@@ -52,7 +46,7 @@ function labelForKey(key, index) {
 }
 
 function valueToText(value) {
-  const unwrappedValue = unwrapTextNode(value);
+  const unwrappedValue = unwrapXmlTextNode(value);
   if (unwrappedValue !== value) {
     return valueToText(unwrappedValue);
   }
@@ -71,18 +65,18 @@ function valueToText(value) {
 }
 
 function summarizeValue(value, hideEmpty) {
-  const unwrappedValue = unwrapTextNode(value);
+  const unwrappedValue = unwrapXmlTextNode(value);
   if (unwrappedValue !== value) {
     return summarizeValue(unwrappedValue, hideEmpty);
   }
 
   if (Array.isArray(value)) {
-    const count = hideEmpty ? value.filter((item) => !isEmptyValue(item)).length : value.length;
+    const count = hideEmpty ? value.filter((item) => !isBusinessEmptyXmlValue('', item)).length : value.length;
     return `${count} ${count > 1 ? 'éléments' : 'élément'}`;
   }
 
   if (value !== null && typeof value === 'object') {
-    const count = Object.values(value).filter((item) => !hideEmpty || !isEmptyValue(item)).length;
+    const count = Object.entries(value).filter(([key, item]) => !hideEmpty || !isBusinessEmptyXmlValue(key, item)).length;
     return `${count} ${count > 1 ? 'entrées' : 'entrée'}`;
   }
 
@@ -90,7 +84,7 @@ function summarizeValue(value, hideEmpty) {
 }
 
 function childrenFor(value, hideEmpty) {
-  const unwrappedValue = unwrapTextNode(value);
+  const unwrappedValue = unwrapXmlTextNode(value);
   if (unwrappedValue !== value) {
     return childrenFor(unwrappedValue, hideEmpty);
   }
@@ -103,15 +97,23 @@ function childrenFor(value, hideEmpty) {
 
   if (value !== null && typeof value === 'object') {
     return Object.entries(value)
-      .map(([key, child]) => ({ key, label: labelForKey(key), value: child }))
-      .filter((child) => !hideEmpty || !isEmptyValue(child.value));
+      .flatMap(([key, child]) => {
+        if (key === 'items' && Array.isArray(child)) {
+          return child.map((item, index) => ({ key: `${key}-${index}`, label: labelForKey('', index), value: item }));
+        }
+        if (key === 'items') {
+          return [{ key, label: 'Élément 1', value: child }];
+        }
+        return [{ key, label: labelForKey(key), value: child }];
+      })
+      .filter((child) => !hideEmpty || !isBusinessEmptyXmlValue(child.key, child.value));
   }
 
   return [];
 }
 
 function normalizeSearch(value) {
-  return cleanXmlKey(value).toLowerCase();
+  return normalizeXmlTerm(cleanXmlKey(value)).toLowerCase();
 }
 
 function nodeMatches(label, value, pathLabel, query) {
@@ -124,34 +126,46 @@ function nodeMatches(label, value, pathLabel, query) {
 }
 
 function collectExpandablePaths(value, options = {}) {
-  const { hideEmpty = true, maxDepth = Infinity, query = '' } = options;
+  const { hideEmpty = true, maxDepth = Infinity, query = '', smart = false } = options;
   const paths = [];
 
   function walk(nodeValue, path, label, depth, ancestors) {
     if (!isBranch(nodeValue) || depth >= maxDepth) {
-      return false;
+      return { matches: false, interesting: isInterestingXmlValue(label, nodeValue) };
     }
 
     const pathLabel = path.join(' > ');
     const selfMatches = nodeMatches(label, nodeValue, pathLabel, query);
     const childEntries = childrenFor(nodeValue, hideEmpty);
+    const nodeIsInteresting = isInterestingXmlValue(label, nodeValue);
     let childMatches = false;
+    let childInteresting = false;
 
     childEntries.forEach((child) => {
       const childPath = [...path, child.label];
-      if (walk(child.value, childPath, child.label, depth + 1, [...ancestors, pathLabel])) {
+      const childResult = walk(child.value, childPath, child.label, depth + 1, [...ancestors, pathLabel]);
+      if (childResult.matches) {
         childMatches = true;
+      }
+      if (childResult.interesting) {
+        childInteresting = true;
       }
     });
 
-    if (!query || selfMatches || childMatches) {
+    const shouldOpen = query
+      ? selfMatches || childMatches
+      : smart
+        ? nodeIsInteresting || childInteresting
+        : depth < maxDepth;
+
+    if (shouldOpen) {
       paths.push(pathLabel);
       if (query) {
         ancestors.forEach((ancestor) => paths.push(ancestor));
       }
     }
 
-    return selfMatches || childMatches;
+    return { matches: selfMatches || childMatches, interesting: nodeIsInteresting || childInteresting };
   }
 
   walk(value, [ROOT_PATH], ROOT_PATH, 0, []);
@@ -172,11 +186,46 @@ function hasVisibleMatch(value, label, path, query, hideEmpty) {
   );
 }
 
-function XmlTreeNode({ value, label, path, depth, expandedPaths, onToggle, query, hideEmpty }) {
-  const displayValue = unwrapTextNode(value);
-  const pathLabel = path.join(' > ');
+function interestLabel(status) {
+  if (status === 'interesting') {
+    return 'contenu déclaré';
+  }
+  if (status === 'boilerplate') {
+    return 'technique';
+  }
+  return 'vide';
+}
 
-  if (hideEmpty && isEmptyValue(displayValue)) {
+function highlightText(text, query) {
+  const value = String(text);
+  if (!query) {
+    return value;
+  }
+
+  const normalizedValue = normalizeSearch(value);
+  const index = normalizedValue.indexOf(query);
+  if (index === -1) {
+    return value;
+  }
+
+  const before = value.slice(0, index);
+  const match = value.slice(index, index + query.length);
+  const after = value.slice(index + query.length);
+  return (
+    <>
+      {before}
+      <mark>{match}</mark>
+      {after}
+    </>
+  );
+}
+
+function XmlTreeNode({ value, label, path, depth, expandedPaths, onToggle, query, hideEmpty }) {
+  const displayValue = unwrapXmlTextNode(value);
+  const pathLabel = path.join(' > ');
+  const interestStatus = classifyXmlNode(label, displayValue);
+
+  if (hideEmpty && isBusinessEmptyXmlValue(label, displayValue)) {
     return null;
   }
 
@@ -187,13 +236,19 @@ function XmlTreeNode({ value, label, path, depth, expandedPaths, onToggle, query
   if (!isBranch(displayValue)) {
     const formattedValue = isEmptyValue(displayValue) ? 'Non renseigné' : cleanXmlKey(displayValue);
     const isPrivate = formattedValue === '[Données non publiées]';
+    const valueClassName = [
+      isPrivate ? 'xml-tree-private-value' : 'xml-tree-value',
+      interestStatus !== 'interesting' ? 'xml-tree-muted-value' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     return (
-      <div className="xml-tree-leaf" style={{ '--depth': depth }} title={pathLabel}>
+      <div className={`xml-tree-leaf ${interestStatus}`} style={{ '--depth': depth }} title={pathLabel}>
         <span className="xml-tree-spacer" aria-hidden="true" />
         <div className="xml-tree-leaf-content">
-          <span className="xml-tree-key">{label}</span>
-          <span className={isPrivate ? 'xml-tree-private-value' : 'xml-tree-value'}>{formattedValue}</span>
+          <span className="xml-tree-key">{highlightText(label, query)}</span>
+          <span className={valueClassName}>{highlightText(formattedValue, query)}</span>
         </div>
       </div>
     );
@@ -215,7 +270,7 @@ function XmlTreeNode({ value, label, path, depth, expandedPaths, onToggle, query
   }
 
   return (
-    <div className="xml-tree-branch" title={pathLabel}>
+    <div className={`xml-tree-branch ${interestStatus}`} title={pathLabel}>
       <button
         type="button"
         className="xml-tree-node"
@@ -224,8 +279,11 @@ function XmlTreeNode({ value, label, path, depth, expandedPaths, onToggle, query
         onClick={() => onToggle(pathLabel)}
       >
         <ChevronRight className={isOpen ? 'xml-tree-chevron open' : 'xml-tree-chevron'} size={16} aria-hidden="true" />
-        <span className="xml-tree-key">{label}</span>
-        <span className="xml-tree-summary">{summarizeValue(displayValue, hideEmpty)}</span>
+        <span className="xml-tree-key">{highlightText(label, query)}</span>
+        <span className="xml-tree-meta">
+          <span className="xml-tree-summary">{summarizeValue(displayValue, hideEmpty)}</span>
+          <span className={`xml-interest-badge ${interestStatus}`}>{interestLabel(interestStatus)}</span>
+        </span>
         <span className="xml-tree-path">{path.slice(1).join(' > ') || ROOT_PATH}</span>
       </button>
       {isOpen ? (
@@ -253,20 +311,26 @@ export default function XmlViewer({ value, compact = false, initialDepth = compa
   const searchId = useId();
   const [query, setQuery] = useState('');
   const [hideEmpty, setHideEmpty] = useState(true);
-  const [expandedPaths, setExpandedPaths] = useState(() => collectExpandablePaths(value, { hideEmpty: true, maxDepth: initialDepth }));
+  const [expansionMode, setExpansionMode] = useState(compact ? 'depth' : 'smart');
+  const [expandedPaths, setExpandedPaths] = useState(() =>
+    collectExpandablePaths(value, { hideEmpty: true, maxDepth: initialDepth, smart: !compact }),
+  );
   const normalizedQuery = normalizeSearch(query.trim());
 
   useEffect(() => {
     setQuery('');
     setHideEmpty(true);
-    setExpandedPaths(collectExpandablePaths(value, { hideEmpty: true, maxDepth: initialDepth }));
-  }, [initialDepth, value]);
+    setExpansionMode(compact ? 'depth' : 'smart');
+    setExpandedPaths(collectExpandablePaths(value, { hideEmpty: true, maxDepth: initialDepth, smart: !compact }));
+  }, [compact, initialDepth, value]);
 
   useEffect(() => {
     if (normalizedQuery) {
       setExpandedPaths(collectExpandablePaths(value, { hideEmpty, query: normalizedQuery }));
+    } else if (expansionMode === 'smart') {
+      setExpandedPaths(collectExpandablePaths(value, { hideEmpty, smart: true }));
     }
-  }, [hideEmpty, normalizedQuery, value]);
+  }, [expansionMode, hideEmpty, normalizedQuery, value]);
 
   function togglePath(path) {
     setExpandedPaths((current) => {
@@ -281,7 +345,13 @@ export default function XmlViewer({ value, compact = false, initialDepth = compa
   }
 
   function expandToDepth(depth) {
+    setExpansionMode(`depth-${depth}`);
     setExpandedPaths(collectExpandablePaths(value, { hideEmpty, maxDepth: depth }));
+  }
+
+  function expandSmart() {
+    setExpansionMode('smart');
+    setExpandedPaths(collectExpandablePaths(value, { hideEmpty, smart: true }));
   }
 
   function expandResults() {
@@ -307,7 +377,14 @@ export default function XmlViewer({ value, compact = false, initialDepth = compa
             />
           </label>
           <div className="xml-toolbar-actions">
-            <button type="button" className="secondary-button" onClick={() => setExpandedPaths(new Set())}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setExpansionMode('collapsed');
+                setExpandedPaths(new Set());
+              }}
+            >
               <EyeOff size={16} aria-hidden="true" />
               Tout replier
             </button>
@@ -316,10 +393,13 @@ export default function XmlViewer({ value, compact = false, initialDepth = compa
               Déplier les résultats
             </button>
             <div className="segmented-control xml-depth-control" aria-label="Profondeur affichée">
-              <button type="button" onClick={() => expandToDepth(2)}>
+              <button type="button" className={expansionMode === 'smart' ? 'active' : ''} onClick={expandSmart}>
+                Vue intelligente
+              </button>
+              <button type="button" className={expansionMode === 'depth-2' ? 'active' : ''} onClick={() => expandToDepth(2)}>
                 Niveau 2
               </button>
-              <button type="button" onClick={() => expandToDepth(4)}>
+              <button type="button" className={expansionMode === 'depth-4' ? 'active' : ''} onClick={() => expandToDepth(4)}>
                 Niveau 4
               </button>
             </div>
