@@ -57,6 +57,8 @@ td { border-top: 1px solid #e2e8f0; padding: 12px; color: #334155; font-size: 0.
 .network-wrapper { position: relative; }
 .network-links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .network-label { font-size: 12px; fill: #0f172a; font-weight: 700; }
+.spouse-network-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.spouse-network-title { margin-bottom: 10px; color: #0f172a; font-weight: 800; }
 .chart-tooltip { display: grid; gap: 4px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; background: #ffffff; color: #0f172a; }
 .job-list { display: grid; gap: 10px; margin-top: 16px; }
 .job-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }

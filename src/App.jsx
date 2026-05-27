@@ -109,8 +109,8 @@ function Dashboard() {
 
   const stats = useMemo(() => salaryStats(salaryRows), [salaryRows]);
   const spouseStats = useMemo(() => buildSpouseStats(spouseRows), [spouseRows]);
-  const spouseNetwork = useMemo(() => buildSpouseNetwork(spouseRows), [spouseRows]);
   const spouseTopJobs = useMemo(() => getTopEntries(spouseStats.jobCounts, 8), [spouseStats.jobCounts]).filter((job) => !['néant', 'neant', 'non renseigné', 'non renseigne'].includes(job.label.toLowerCase()));
+  const spouseNetwork = useMemo(() => buildSpouseNetwork(spouseRows, 6), [spouseRows]);
 
   return (
     <div className="app-shell">
@@ -246,15 +246,6 @@ function SpouseView({ stats, network, topJobs, loaded }) {
                 </div>
               ))}
             </div>
-          </section>
-          <section className="panel prose-panel">
-            <p className="eyebrow">Lecture rapide</p>
-            <h2>Comment lire le graphe</h2>
-            <p>
-              Chaque élu est relié au métier de son conjoint. Deux élus partageant le même métier de conjoint se
-              retrouvent donc connectés indirectement, ce qui crée des grappes amusantes à explorer. Les statistiques
-              de genre restent indicatives, car elles reposent sur les indices disponibles dans les noms et titres.
-            </p>
           </section>
         </>
       ) : (

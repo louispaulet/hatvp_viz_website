@@ -69,7 +69,18 @@ export function normalizeJobName(value) {
   return String(value || '')
     .replace(/\[Données non publiées\]/gi, '')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
+    .replace(/^retraitée$/i, 'Retraitée');
+}
+
+export function getJobDisplayKey(value) {
+  const normalized = normalizeJobName(value);
+  if (!normalized) return '';
+  const lower = normalized.toLowerCase();
+  const feminineNames = new Set(['retraitée']);
+  if (feminineNames.has(lower)) return normalized;
+  if (normalized === 'Retraitée') return normalized;
+  return normalized;
 }
 
 export function isEmptyResponseJob(value) {
@@ -101,7 +112,7 @@ export function buildSpouseStats(rows) {
   const spouseRows = Array.isArray(rows) ? rows : normalizeSpouseRows(rows);
   const jobCounts = spouseRows.reduce((acc, row) => {
     if (!row.jobName || isEmptyResponseJob(row.jobName)) return acc;
-    const key = row.jobName;
+    const key = getJobDisplayKey(row.jobName);
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
@@ -130,11 +141,12 @@ export function getTopEntries(counts, limit = 10) {
     .slice(0, limit);
 }
 
-export function buildSpouseNetwork(rows, limit = 140) {
+export function buildSpouseNetwork(rows, limit = 5) {
   const spouseRows = Array.isArray(rows) ? rows.filter((row) => row.spouseName || row.jobName) : normalizeSpouseRows(rows).filter((row) => row.spouseName || row.jobName);
   const jobCounts = spouseRows.reduce((acc, row) => {
     if (!row.jobName || isEmptyResponseJob(row.jobName)) return acc;
-    acc[row.jobName] = (acc[row.jobName] || 0) + 1;
+    const key = getJobDisplayKey(row.jobName);
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
 
