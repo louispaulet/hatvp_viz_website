@@ -48,9 +48,9 @@ vi.mock('./lib/spouseData.js', async () => {
           declaration_uuid: '1',
           declarant_prenom: 'Alice',
           declarant_nom: 'Martin',
-          conjoint_prenom: 'Mme Claire',
-          conjoint_nom: 'Dupont',
-          activite_professionnelle: 'Infirmière',
+          conjoint_prenom: '',
+          conjoint_nom: '',
+          activite_professionnelle: 'Directrice générale',
           employeur_conjoint: 'CHU',
           conjoint_nom_redacted: 'false',
           row_index: '1',
@@ -59,9 +59,9 @@ vi.mock('./lib/spouseData.js', async () => {
           declaration_uuid: '2',
           declarant_prenom: 'Bruno',
           declarant_nom: 'Durand',
-          conjoint_prenom: 'M. Jean',
-          conjoint_nom: 'Durand',
-          activite_professionnelle: 'Infirmière',
+          conjoint_prenom: '',
+          conjoint_nom: '',
+          activite_professionnelle: 'Directeur financier',
           employeur_conjoint: 'Hôpital',
           conjoint_nom_redacted: 'false',
           row_index: '1',
@@ -116,5 +116,14 @@ describe('App', () => {
     expect(screen.getByLabelText(/rechercher une clé/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Tout replier/i })).toBeInTheDocument();
     expect(screen.getAllByText('ABAD').length).toBeGreaterThan(0);
+  });
+
+  it('shows a non-zero gender estimate on the conjoints tab', async () => {
+    window.location.hash = '#/conjoints';
+    render(<App />);
+
+    await waitFor(() => expect(screen.getByText('Impossible de charger les jeux de données locaux.')).toBeInTheDocument());
+    expect(screen.queryByText('0 % femmes')).not.toBeInTheDocument();
+    expect(screen.queryByText('0 femmes · 0 hommes · 3 797 inconnus')).not.toBeInTheDocument();
   });
 });
