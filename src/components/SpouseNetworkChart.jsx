@@ -8,11 +8,12 @@ function buildChartData(nodes, links, jobName) {
   const linkedPoliticianIds = new Set(links.filter((link) => link.target === jobNode?.id).map((link) => link.source));
   const politicianNodes = nodes.filter((node) => node.type === 'politician' && linkedPoliticianIds.has(node.id));
   const radius = 28;
+  const step = (Math.PI * 2) / Math.max(politicianNodes.length, 1);
 
   if (jobNode) {
-    positioned.push({ ...jobNode, x: 50, y: 50, fill: '#2563eb' });
+    positioned.push({ ...jobNode, x: 50, y: 50, fill: '#2563eb', value: links.filter((link) => link.target === jobNode.id).length });
     politicianNodes.forEach((node, index) => {
-      const angle = (index / Math.max(politicianNodes.length, 1)) * Math.PI * 2;
+      const angle = index * step;
       const labelPosition = Math.cos(angle) >= 0 ? 'right' : 'left';
       positioned.push({
         ...node,
@@ -20,6 +21,7 @@ function buildChartData(nodes, links, jobName) {
         y: 50 + Math.sin(angle) * radius,
         fill: '#f97316',
         labelPosition,
+        value: links.filter((link) => link.source === node.id).length,
       });
     });
   }
@@ -83,26 +85,26 @@ export default function SpouseNetworkChart({ nodes, links }) {
         {panels.map(({ jobNode, points, linkSegments }) => (
           <div key={jobNode.id} className="chart-frame spouse-network-frame network-wrapper">
             <div className="spouse-network-title">{jobNode.label}</div>
-            <svg className="network-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              {linkSegments.map((link, index) => (
-                <line
-                  key={`${link.source.id}-${link.target.id}-${index}`}
-                  x1={link.source.x}
-                  y1={link.source.y}
-                  x2={link.target.x}
-                  y2={link.target.y}
-                  stroke="#94a3b8"
-                  strokeOpacity="0.28"
-                  strokeWidth="0.8"
-                />
-              ))}
-            </svg>
             <ResponsiveContainer width="100%" height={520}>
               <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
                 <XAxis type="number" dataKey="x" domain={[0, 100]} hide />
                 <YAxis type="number" dataKey="y" domain={[0, 100]} hide />
                 <Scatter data={points} shape={<NodeShape />} />
                 <Tooltip content={<CustomTooltip />} />
+                <svg className="network-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  {linkSegments.map((link, index) => (
+                    <line
+                      key={`${link.source.id}-${link.target.id}-${index}`}
+                      x1={link.source.x}
+                      y1={link.source.y}
+                      x2={link.target.x}
+                      y2={link.target.y}
+                      stroke="#94a3b8"
+                      strokeOpacity="0.28"
+                      strokeWidth="0.8"
+                    />
+                  ))}
+                </svg>
               </ScatterChart>
             </ResponsiveContainer>
           </div>
