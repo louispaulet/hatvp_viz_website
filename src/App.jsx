@@ -203,7 +203,25 @@ function PublicationsView({ rows }) {
 }
 
 function SpouseView({ stats, network, topJobs, loaded }) {
-  const genderTotal = stats.genderCounts.female + stats.genderCounts.male + stats.genderCounts.unknown;
+  const genderStats = useMemo(() => {
+    const counts = { female: 0, male: 0, unknown: 0 };
+    for (const row of stats.spouseRows) {
+      const text = `${row.jobName || ''} ${row.employer || ''}`.toLowerCase();
+      if (text.includes('directrice') || text.includes('présidente') || text.includes('gérante') || text.includes('consultante') || text.includes('avocate') || text.includes('pharmacienne') || text.includes('professeure') || text.includes('enseignante') || text.includes('secrétaire')) {
+        counts.female += 1;
+      } else if (text.includes('directeur') || text.includes('président') || text.includes('gérant') || text.includes('consultant') || text.includes('avocat') || text.includes('pharmacien') || text.includes('professeur') || text.includes('enseignant') || text.includes('secrétaire')) {
+        counts.male += 1;
+      } else {
+        counts.unknown += 1;
+      }
+    }
+    const known = counts.female + counts.male;
+    return {
+      genderCounts: counts,
+      genderTotal: counts.female + counts.male + counts.unknown,
+      genderPercent: known ? Math.round((counts.female / known) * 100) : 0,
+    };
+  }, [stats.spouseRows]);
   return (
     <div className="stack">
       {loaded ? (
@@ -216,8 +234,8 @@ function SpouseView({ stats, network, topJobs, loaded }) {
             />
             <MetricCard
               label="Genre estimé"
-              value={genderTotal ? `${Math.round((stats.genderCounts.female / genderTotal) * 100)} % femmes` : '-'}
-              helper={`${formatCount(stats.genderCounts.female)} femmes · ${formatCount(stats.genderCounts.male)} hommes · ${formatCount(stats.genderCounts.unknown)} inconnus`}
+              value={genderStats.genderTotal ? `${genderStats.genderPercent} % femmes` : '-'}
+              helper={`${formatCount(genderStats.genderCounts.female)} femmes · ${formatCount(genderStats.genderCounts.male)} hommes · ${formatCount(genderStats.genderCounts.unknown)} inconnus`}
             />
           </div>
           <div className="metrics-grid two">

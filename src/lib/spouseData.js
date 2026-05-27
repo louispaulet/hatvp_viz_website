@@ -155,7 +155,7 @@ export function buildSpouseNetwork(rows, limit = 5) {
   const links = [];
 
   for (const row of spouseRows) {
-    if (!topJobs.has(row.jobName)) continue;
+    if (!topJobs.has(getJobDisplayKey(row.jobName))) continue;
 
     const politicianId = `politician:${row.declarantFirstName} ${row.declarantLastName}`.trim();
     const jobId = `job:${row.jobName}`;
