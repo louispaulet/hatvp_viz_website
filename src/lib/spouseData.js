@@ -25,12 +25,41 @@ const surnameMaleHints = new Set(['ard', 'aud', 'bert', 'el', 'eau', 'et', 'eur'
 
 const femaleTitleHints = ['mme', 'madame', 'm me', 'mme.'];
 const maleTitleHints = ['m.', 'mr', 'monsieur', 'm '];
+const femaleJobHints = [
+  'directrice',
+  'presidente',
+  'gerante',
+  'chargee',
+  'conseillere',
+  'consultante',
+  'avocate',
+  'pharmacienne',
+  'professeure',
+  'enseignante',
+  'infirmiere',
+  'retraitee',
+];
+const maleJobHints = [
+  'directeur',
+  'president',
+  'gerant',
+  'charge',
+  'conseiller',
+  'consultant',
+  'avocat',
+  'pharmacien',
+  'professeur',
+  'enseignant',
+  'infirmier',
+  'retraite',
+];
 
 export function parseTsvFile(text) {
   return new Promise((resolve, reject) => {
     Papa.parse(text, {
       header: true,
       delimiter: '\t',
+      quoteChar: '\0',
       skipEmptyLines: true,
       complete: ({ data }) => resolve(data),
       error: reject,
@@ -66,11 +95,25 @@ export function normalizeSpouseRows(rows) {
 }
 
 export function normalizeJobName(value) {
-  return String(value || '')
+  const normalized = String(value || '')
     .replace(/\[Données non publiées\]/gi, '')
     .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/^retraitée$/i, 'Retraitée');
+    .trim();
+  const key = foldText(normalized);
+
+  if (!key) return '';
+  if (key === 'retraitee') return 'Retraitée';
+  if (key === 'retraite') return 'Retraité';
+  if (key === 'professeur des ecoles') return 'Professeur des écoles';
+  if (key === 'professeure des ecoles') return 'Professeure des écoles';
+  if (key === 'infirmiere') return 'Infirmière';
+  if (key === 'ingenieur') return 'Ingénieur';
+  if (key === 'gerant') return 'Gérant';
+  if (key === 'enseignante') return 'Enseignante';
+  if (key === 'enseignant') return 'Enseignant';
+  if (key === 'directeur') return 'Directeur';
+
+  return normalized;
 }
 
 export function getJobDisplayKey(value) {
@@ -89,19 +132,32 @@ export function isEmptyResponseJob(value) {
 }
 
 export function inferSpouseGender(row, spouseName = '') {
-  const joined = `${row.conjoint_prenom || ''} ${row.conjoint_nom || ''} ${spouseName}`.toLowerCase();
+  const joined = foldText(`${row.conjoint_prenom || ''} ${row.conjoint_nom || ''} ${spouseName}`);
   if (femaleTitleHints.some((hint) => joined.includes(hint))) return 'female';
   if (maleTitleHints.some((hint) => joined.includes(hint))) return 'male';
 
-  const firstName = String(row.conjoint_prenom || '').trim().toLowerCase();
+  const activity = foldText(`${row.activite_professionnelle || ''} ${row.employeur_conjoint || ''}`);
+  if (femaleJobHints.some((hint) => activity.includes(hint))) return 'female';
+  if (maleJobHints.some((hint) => activity.includes(hint))) return 'male';
+
+  const firstName = foldText(row.conjoint_prenom || '');
   if (firstName.endsWith('e') || firstName.endsWith('a')) return 'female';
   if (firstName.endsWith('o') || firstName.endsWith('n') || firstName.endsWith('r')) return 'male';
 
-  const lastName = String(row.conjoint_nom || '').trim().toLowerCase();
+  const lastName = foldText(row.conjoint_nom || '');
   if ([...surnameFemaleHints].some((suffix) => lastName.endsWith(suffix))) return 'female';
   if ([...surnameMaleHints].some((suffix) => lastName.endsWith(suffix))) return 'male';
 
   return 'unknown';
+}
+
+export function foldText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export function formatCount(value) {
@@ -129,6 +185,8 @@ export function buildSpouseStats(rows) {
     spouseRows,
     jobCounts,
     genderCounts,
+    distinctJobs: Object.keys(jobCounts).length,
+    genderKnownRows: genderCounts.female + genderCounts.male,
     uniquePoliticians: uniquePoliticians.size,
     totalRows: spouseRows.length,
   };
@@ -141,7 +199,7 @@ export function getTopEntries(counts, limit = 10) {
     .slice(0, limit);
 }
 
-export function buildSpouseNetwork(rows, limit = 5) {
+export function buildSpouseNetwork(rows, limit = 8, politiciansPerJob = 16) {
   const spouseRows = Array.isArray(rows) ? rows.filter((row) => row.spouseName || row.jobName) : normalizeSpouseRows(rows).filter((row) => row.spouseName || row.jobName);
   const jobCounts = spouseRows.reduce((acc, row) => {
     if (!row.jobName || isEmptyResponseJob(row.jobName)) return acc;
@@ -153,12 +211,19 @@ export function buildSpouseNetwork(rows, limit = 5) {
   const topJobs = new Set(getTopEntries(jobCounts, limit).map((entry) => entry.label));
   const nodes = new Map();
   const links = [];
+  const seenLinks = new Set();
+  const linksPerJob = {};
 
   for (const row of spouseRows) {
-    if (!topJobs.has(getJobDisplayKey(row.jobName))) continue;
+    const jobKey = getJobDisplayKey(row.jobName);
+    if (!topJobs.has(jobKey)) continue;
 
     const politicianId = `politician:${row.declarantFirstName} ${row.declarantLastName}`.trim();
-    const jobId = `job:${row.jobName}`;
+    const jobId = `job:${jobKey}`;
+    const linkId = `${politicianId}->${jobId}`;
+    linksPerJob[jobId] = linksPerJob[jobId] || 0;
+
+    if (seenLinks.has(linkId) || linksPerJob[jobId] >= politiciansPerJob) continue;
 
     if (!nodes.has(politicianId)) {
       nodes.set(politicianId, {
@@ -169,11 +234,12 @@ export function buildSpouseNetwork(rows, limit = 5) {
       });
     }
     if (!nodes.has(jobId)) {
-      nodes.set(jobId, { id: jobId, label: row.jobName, type: 'job', weight: 0 });
+      nodes.set(jobId, { id: jobId, label: jobKey, type: 'job', weight: jobCounts[jobKey] || 0 });
     }
 
     nodes.get(politicianId).weight += 1;
-    nodes.get(jobId).weight += 1;
+    seenLinks.add(linkId);
+    linksPerJob[jobId] += 1;
     links.push({ source: politicianId, target: jobId, value: 1, gender: row.spouseGender });
   }
 

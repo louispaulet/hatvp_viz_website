@@ -109,8 +109,8 @@ function Dashboard() {
 
   const stats = useMemo(() => salaryStats(salaryRows), [salaryRows]);
   const spouseStats = useMemo(() => buildSpouseStats(spouseRows), [spouseRows]);
-  const spouseTopJobs = useMemo(() => getTopEntries(spouseStats.jobCounts, 8), [spouseStats.jobCounts]).filter((job) => !['néant', 'neant', 'non renseigné', 'non renseigne'].includes(job.label.toLowerCase()));
-  const spouseNetwork = useMemo(() => buildSpouseNetwork(spouseRows, 6), [spouseRows]);
+  const spouseTopJobs = useMemo(() => getTopEntries(spouseStats.jobCounts, 12), [spouseStats.jobCounts]);
+  const spouseNetwork = useMemo(() => buildSpouseNetwork(spouseRows, 8, 14), [spouseRows]);
 
   return (
     <div className="app-shell">
@@ -203,25 +203,10 @@ function PublicationsView({ rows }) {
 }
 
 function SpouseView({ stats, network, topJobs, loaded }) {
-  const genderStats = useMemo(() => {
-    const counts = { female: 0, male: 0, unknown: 0 };
-    for (const row of stats.spouseRows) {
-      const text = `${row.jobName || ''} ${row.employer || ''}`.toLowerCase();
-      if (text.includes('directrice') || text.includes('présidente') || text.includes('gérante') || text.includes('consultante') || text.includes('avocate') || text.includes('pharmacienne') || text.includes('professeure') || text.includes('enseignante') || text.includes('secrétaire')) {
-        counts.female += 1;
-      } else if (text.includes('directeur') || text.includes('président') || text.includes('gérant') || text.includes('consultant') || text.includes('avocat') || text.includes('pharmacien') || text.includes('professeur') || text.includes('enseignant') || text.includes('secrétaire')) {
-        counts.male += 1;
-      } else {
-        counts.unknown += 1;
-      }
-    }
-    const known = counts.female + counts.male;
-    return {
-      genderCounts: counts,
-      genderTotal: counts.female + counts.male + counts.unknown,
-      genderPercent: known ? Math.round((counts.female / known) * 100) : 0,
-    };
-  }, [stats.spouseRows]);
+  const genderKnownRows = stats.genderKnownRows || 0;
+  const femalePercent = genderKnownRows ? Math.round((stats.genderCounts.female / genderKnownRows) * 100) : 0;
+  const maxJobCount = Math.max(...topJobs.map((job) => job.value), 1);
+
   return (
     <div className="stack">
       {loaded ? (
@@ -233,9 +218,9 @@ function SpouseView({ stats, network, topJobs, loaded }) {
               helper={`${formatCount(stats.uniquePoliticians)} élus distincts`}
             />
             <MetricCard
-              label="Genre estimé"
-              value={genderStats.genderTotal ? `${genderStats.genderPercent} % femmes` : '-'}
-              helper={`${formatCount(genderStats.genderCounts.female)} femmes · ${formatCount(genderStats.genderCounts.male)} hommes · ${formatCount(genderStats.genderCounts.unknown)} inconnus`}
+              label="Genre estimé des conjoints"
+              value={genderKnownRows ? `${femalePercent} % femmes` : '-'}
+              helper={`${formatCount(stats.genderCounts.female)} femmes · ${formatCount(stats.genderCounts.male)} hommes · ${formatCount(stats.genderCounts.unknown)} inconnus`}
             />
           </div>
           <div className="metrics-grid two">
@@ -245,9 +230,9 @@ function SpouseView({ stats, network, topJobs, loaded }) {
               helper={topJobs[0] ? `${formatCount(topJobs[0].value)} occurrences` : 'aucune donnée'}
             />
             <MetricCard
-              label="Deuxième métier"
-              value={topJobs[1]?.label || '-'}
-              helper={topJobs[1] ? `${formatCount(topJobs[1].value)} occurrences` : 'aucune donnée'}
+              label="Métiers distincts"
+              value={formatCount(stats.distinctJobs)}
+              helper="après nettoyage des libellés vides"
             />
           </div>
           <SpouseNetworkChart nodes={network.nodes} links={network.links} />
@@ -257,13 +242,22 @@ function SpouseView({ stats, network, topJobs, loaded }) {
             <div className="job-list">
               {topJobs.map((job, index) => (
                 <div key={job.label} className="job-item">
-                  <strong>
-                    {index + 1}. {job.label}
-                  </strong>
-                  <span>{formatCount(job.value)} déclarations</span>
+                  <div className="job-rank">
+                    <strong>
+                      {index + 1}. {job.label}
+                    </strong>
+                    <span>{formatCount(job.value)} déclarations</span>
+                  </div>
+                  <div className="job-bar" aria-hidden="true">
+                    <span style={{ width: `${Math.max(8, (job.value / maxJobCount) * 100)}%` }} />
+                  </div>
                 </div>
               ))}
             </div>
+            <p className="note">
+              Le genre est une estimation fragile : elle utilise les titres ou noms publiés lorsqu’ils existent, puis
+              les formes genrées des métiers lorsque les noms des conjoints sont masqués.
+            </p>
           </section>
         </>
       ) : (

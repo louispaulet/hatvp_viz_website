@@ -53,24 +53,52 @@ td { border-top: 1px solid #e2e8f0; padding: 12px; color: #334155; font-size: 0.
 .money { color: #166534; font-weight: 900; white-space: nowrap; }
 .description-cell { max-width: 360px; }
 .chart-frame { min-height: 360px; }
-.spouse-network-frame { min-height: 520px; }
-.network-wrapper { position: relative; }
-.network-links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.network-label { font-size: 12px; fill: #0f172a; font-weight: 700; }
-.spouse-network-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.spouse-network-title { margin-bottom: 10px; color: #0f172a; font-weight: 800; }
+.spouse-network-panel { display: grid; gap: 16px; }
+.network-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.network-chip { min-height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; background: #ffffff; color: #334155; font-weight: 800; }
+.network-chip:hover, .network-chip.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+.spouse-network-canvas { min-height: 560px; border: 1px solid #e2e8f0; border-radius: 8px; background: radial-gradient(circle at 50% 50%, #ffffff, #f8fafc 68%); overflow: hidden; }
+.spouse-network-canvas svg { display: block; width: 100%; height: 560px; }
+.network-line { stroke: #94a3b8; stroke-width: 0.22; stroke-opacity: 0.42; animation: networkPulse 3.8s ease-in-out infinite; }
+.network-line.gender-female { stroke: #db2777; }
+.network-line.gender-male { stroke: #2563eb; }
+.network-line.gender-unknown { stroke: #94a3b8; stroke-dasharray: 1 1; }
+.network-node circle { stroke: #ffffff; stroke-width: 0.4; }
+.job-node circle { fill: #1d4ed8; }
+.politician-node circle { fill: #f97316; }
+.network-node text { fill: #0f172a; font-size: 2.4px; font-weight: 800; paint-order: stroke; stroke: #ffffff; stroke-width: 0.55; stroke-linejoin: round; }
+.politician-node text { font-size: 1.7px; font-weight: 700; }
+.network-legend { display: flex; flex-wrap: wrap; gap: 12px 18px; color: #475569; font-size: 0.88rem; font-weight: 700; }
+.network-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+.legend-dot.job { background: #1d4ed8; }
+.legend-dot.politician { background: #f97316; }
+.legend-line { width: 18px; height: 2px; display: inline-block; border-radius: 999px; background: #94a3b8; }
+.legend-line.female { background: #db2777; }
+.legend-line.male { background: #2563eb; }
 .chart-tooltip { display: grid; gap: 4px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; background: #ffffff; color: #0f172a; }
 .job-list { display: grid; gap: 10px; margin-top: 16px; }
-.job-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
+.job-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 220px); align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
+.job-rank { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
 .job-item strong { color: #0f172a; }
 .job-item span { color: #64748b; font-weight: 700; }
+.job-bar { height: 8px; border-radius: 999px; background: #dbeafe; overflow: hidden; }
+.job-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2563eb, #f97316); }
 .prose-panel p:last-child { margin-bottom: 0; color: #475569; line-height: 1.7; }
 .loading-state { display: inline-flex; align-items: center; gap: 12px; padding: 16px 0; color: #475569; font-weight: 700; }
 .spin { animation: spin 1s linear infinite; }
 .site-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px clamp(16px, 4vw, 48px) 30px; color: #64748b; font-size: 0.92rem; }
 .site-footer a { color: #1d4ed8; font-weight: 800; text-decoration: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes networkPulse {
+  0%, 100% { stroke-opacity: 0.24; }
+  50% { stroke-opacity: 0.58; }
+}
 @media (max-width: 900px) {
   .hero-content, .compact-panel, .metrics-grid, .metrics-grid.two, .table-header, .site-footer { grid-template-columns: 1fr; display: grid; }
   .site-footer { justify-content: start; }
+  .spouse-network-canvas { min-height: 420px; }
+  .spouse-network-canvas svg { height: 420px; }
+  .job-item { grid-template-columns: 1fr; }
+  .job-rank { display: grid; }
 }

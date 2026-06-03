@@ -75,13 +75,22 @@ describe('App', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
     window.location.hash = '';
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve('mock spouse tsv'),
+        }),
+      ),
+    );
   });
 
   it('renders the overall dashboard after loading data', async () => {
     render(<App />);
 
     await waitFor(() => expect(screen.getByText('Plus hautes rémunérations de tous les temps')).toBeInTheDocument());
-    expect(screen.getByText('0 lignes affichées')).toBeInTheDocument();
+    expect(screen.getByText('Martin')).toBeInTheDocument();
   });
 
   it('opens the yearly tab from the hash', async () => {
@@ -122,8 +131,9 @@ describe('App', () => {
     window.location.hash = '#/conjoints';
     render(<App />);
 
-    await waitFor(() => expect(screen.getByText('Impossible de charger les jeux de données locaux.')).toBeInTheDocument());
-    expect(screen.queryByText('0 % femmes')).not.toBeInTheDocument();
-    expect(screen.queryByText('0 femmes · 0 hommes · 3 797 inconnus')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Élus reliés par les métiers de leurs conjoints')).toBeInTheDocument());
+    expect(screen.getByText('50 % femmes')).toBeInTheDocument();
+    expect(screen.getByText('1 femmes · 1 hommes · 0 inconnus')).toBeInTheDocument();
+    expect(screen.getByText('Jobs les plus fréquents')).toBeInTheDocument();
   });
 });
